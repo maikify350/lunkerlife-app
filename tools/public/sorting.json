@@ -1,0 +1,65 @@
+[
+  {
+    "label": "Common Name (A-Z)",
+    "value": "common_name_asc",
+    "field": "common_name",
+    "direction": "asc",
+    "show": true
+  },
+  {
+    "label": "Common Name (Z-A)",
+    "value": "common_name_desc",
+    "field": "common_name", 
+    "direction": "desc",
+    "show": true
+  },
+  {
+    "label": "Scientific Name (A-Z)",
+    "value": "species_asc",
+    "field": "species",
+    "direction": "asc",
+    "show": true
+  },
+  {
+    "label": "Family (A-Z)",
+    "value": "family_asc",
+    "field": "family",
+    "direction": "asc",
+    "show": true
+  },
+  {
+    "label": "Size (Largest First)",
+    "value": "length_desc",
+    "field": "avg_adult_length_inches",
+    "direction": "desc",
+    "show": true
+  },
+  {
+    "label": "Weight (Heaviest First)",
+    "value": "weight_desc",
+    "field": "avg_adult_weight_lbs",
+    "direction": "desc",
+    "show": true
+  },
+  {
+    "label": "Recently Added",
+    "value": "created_desc",
+    "field": "created_at",
+    "direction": "desc",
+    "show": true
+  },
+  {
+    "label": "Recently Updated",
+    "value": "updated_desc",
+    "field": "updated_at",
+    "direction": "desc",
+    "show": true
+  },
+  {
+    "label": "Invasive Status",
+    "value": "invasive_desc",
+    "field": "invasive",
+    "direction": "desc",
+    "show": false
+  }
+]

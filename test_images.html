@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fish Images</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .fish-card { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        .fish-image { width: 100%; height: 150px; object-fit: contain; background: #f0f0f0; }
+        .status { margin-top: 5px; font-size: 12px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Fish Images Test</h1>
+    <p>Testing image URLs from Supabase storage bucket</p>
+    
+    <div class="grid" id="fishGrid"></div>
+
+    <script>
+        // Test fish images
+        const fishImages = [
+            { name: 'Alewife', file: 'Alewife.png' },
+            { name: 'Bass, Largemouth', file: 'Bass-Largemouth.png' },
+            { name: 'Bass, Hybrid Striped', file: 'Bass-Hybrid-Striped.png' },
+            { name: 'Catfish, Channel', file: 'Catfish-Channel.png' },
+            { name: 'Trout, Rainbow', file: 'Trout-Rainbow.png' },
+            { name: 'Pike, Northern', file: 'Pike-Nortern.png' }, // Note the typo
+            { name: 'Walleye', file: 'Walleye.png' },
+            { name: 'Sunfish, Bluegill', file: 'Sunfish-Bluegill.png' }
+        ];
+
+        const baseUrl = 'https://gskbzaduwmsbaxddixmk.supabase.co/storage/v1/object/public/fish-images/';
+        const grid = document.getElementById('fishGrid');
+
+        fishImages.forEach(fish => {
+            const card = document.createElement('div');
+            card.className = 'fish-card';
+            
+            const img = document.createElement('img');
+            img.className = 'fish-image';
+            img.src = baseUrl + fish.file;
+            img.alt = fish.name;
+            
+            const name = document.createElement('h3');
+            name.textContent = fish.name;
+            
+            const status = document.createElement('div');
+            status.className = 'status';
+            status.textContent = 'Loading...';
+            
+            img.onload = () => {
+                status.textContent = '✓ Loaded';
+                status.className = 'status success';
+            };
+            
+            img.onerror = () => {
+                status.textContent = '✗ Failed to load';
+                status.className = 'status error';
+                // Try alternative paths
+                img.src = baseUrl + 'fish-images/' + fish.file;
+            };
+            
+            card.appendChild(name);
+            card.appendChild(img);
+            card.appendChild(status);
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>

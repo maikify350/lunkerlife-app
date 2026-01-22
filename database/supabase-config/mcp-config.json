@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp",
+      "parameters": {
+        "read_only": true,
+        "project_ref": "gskbzaduwmsbaxddixmk",
+        "features": "database,docs",
+        "anon_key": "sb_publishable_ZLynthSYzZz0RthCMq6zRw_7l-F4y9u"
+      }
+    }
+  },
+  "description": "Supabase MCP configuration for LuckerLife project",
+  "safety_settings": {
+    "destructive_operations": "require_confirmation",
+    "schema_changes": "read_only_first",
+    "data_operations": "via_api_only"
+  }
+}
