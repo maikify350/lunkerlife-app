@@ -1,0 +1,2 @@
+INSERT INTO fish_species (class, common_name, also_known_as, description, family, species, environmental_status, habitat, fishing_techniques, spawning_habits_lifecycle, diet_feeding_habits, water_body_type, known_for, world_record)
+VALUES ('Salt', 'Sturgeon, White', 'California White Sturgeon, Columbia Sturgeon, Oregon Sturgeon, Pacific Sturgeon, Sacramento Sturgeon', 'The white sturgeon has a slender, long body, head, and mouth. This fish has no scales;

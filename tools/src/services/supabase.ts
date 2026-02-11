@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'X-Client': 'LuckerLife Fish Database',
+      'X-Client': 'LunkerLife Fish Database',
     },
   },
 })

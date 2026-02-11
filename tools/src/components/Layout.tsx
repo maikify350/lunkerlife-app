@@ -18,7 +18,7 @@ const Layout: FC<LayoutProps> = ({ children }) => {
         <div className="w-full px-6 py-2">
           <div className="flex justify-between items-center">
             <div className="text-xs text-gray-500">
-              <strong>LuckerLife Fish Database</strong> - Internal fish reference data management
+              <strong>LunkerLife Fish Database</strong> - Internal fish reference data management
             </div>
             
             <div className="text-xs text-gray-400">

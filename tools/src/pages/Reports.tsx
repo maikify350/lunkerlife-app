@@ -3,9 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import Button from '../components/ui/Button'
 import { FishSpecies } from '../types/fish'
-import { getImageUrl } from '../utils/imageHelpers'
 import { useSelection } from '../contexts/SelectionContext'
-import { useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 
@@ -18,59 +16,58 @@ declare module 'jspdf' {
 
 const Reports: FC = () => {
   const { selectedFishIds } = useSelection()
-  const navigate = useNavigate()
   const [showNoSelectionDialog, setShowNoSelectionDialog] = useState(false)
-  
+
   // Check if any fish are selected on mount
   useEffect(() => {
     if (selectedFishIds.size === 0) {
       setShowNoSelectionDialog(true)
     }
   }, [])
-  
+
   // Fetch only selected fish species
   const { data: selectedFishSpecies = [], isLoading } = useQuery({
     queryKey: ['fish-species-report', Array.from(selectedFishIds)],
     queryFn: async () => {
       if (selectedFishIds.size === 0) return []
-      
+
       const { data, error } = await supabase
         .from('fish_species')
         .select('*')
         .in('id', Array.from(selectedFishIds))
         .order('common_name')
-      
+
       if (error) throw error
       return (data as FishSpecies[]) || []
     },
     enabled: selectedFishIds.size > 0
   })
-  
+
   // Generate PDF report
   const generatePDFReport = async () => {
     if (selectedFishSpecies.length === 0) {
       setShowNoSelectionDialog(true)
       return
     }
-    
+
     const selectedFish = selectedFishSpecies
-    
+
     // Create PDF in landscape
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4'
     })
-    
+
     // Add title
     doc.setFontSize(20)
-    doc.text('LuckerLife Fish Species Report', 148, 15, { align: 'center' })
-    
+    doc.text('LunkerLife Fish Species Report', 148, 15, { align: 'center' })
+
     // Add generation date
     doc.setFontSize(10)
     doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 148, 22, { align: 'center' })
     doc.text(`Total Species: ${selectedFish.length}`, 148, 28, { align: 'center' })
-    
+
     // Prepare table data
     const tableData = selectedFish.map((fish, index) => [
       (index + 1).toString(),
@@ -83,13 +80,13 @@ const Reports: FC = () => {
       fish.avg_adult_length_inches ? `${fish.avg_adult_length_inches}"` : '-',
       fish.avg_adult_weight_lbs ? `${fish.avg_adult_weight_lbs} lbs` : '-'
     ])
-    
+
     // Add table
     doc.autoTable({
       head: [['#', 'Common Name', 'Family', 'Scientific Name', 'Water', 'Invasive', 'Status', 'Avg Length', 'Avg Weight']],
       body: tableData,
       startY: 35,
-      styles: { 
+      styles: {
         fontSize: 9,
         cellPadding: 2
       },
@@ -112,18 +109,18 @@ const Reports: FC = () => {
         fillColor: [245, 245, 245]
       }
     })
-    
+
     // Save the PDF
     doc.save(`fish-report-${new Date().toISOString().split('T')[0]}.pdf`)
   }
-  
+
   return (
     <div className="h-full flex flex-col">
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <h1 className="text-2xl font-bold text-gray-900">Fish Species Reports</h1>
         <p className="text-gray-600">Generate PDF reports for selected fish species</p>
       </div>
-      
+
       <div className="flex-1 p-6">
         {selectedFishIds.size > 0 ? (
           <div className="max-w-4xl mx-auto">
@@ -146,10 +143,10 @@ const Reports: FC = () => {
                 </>
               )}
             </div>
-            
+
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium mb-4">Report Options</h3>
-              
+
               <div className="space-y-4">
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-2">Quick Summary Report</h4>
@@ -164,7 +161,7 @@ const Reports: FC = () => {
                     Generate PDF Report
                   </Button>
                 </div>
-                
+
                 <div className="border rounded-lg p-4 opacity-50">
                   <h4 className="font-medium mb-2 text-gray-400">Detailed Report</h4>
                   <p className="text-sm text-gray-500 mb-4">
@@ -185,7 +182,7 @@ const Reports: FC = () => {
           </div>
         )}
       </div>
-      
+
       {/* No Selection Dialog */}
       {showNoSelectionDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

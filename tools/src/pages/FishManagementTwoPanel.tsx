@@ -10,6 +10,8 @@ import FishGallery from '../components/FishGallery'
 import { FishSpecies } from '../types/fish'
 import { getImageUrl } from '../utils/imageHelpers'
 import { useSelection } from '../contexts/SelectionContext'
+import { Globe2 } from 'lucide-react'
+import USMapModal from '../components/USMapModal'
 
 interface ImagePreviewModalProps {
   isOpen: boolean
@@ -63,8 +65,8 @@ const FishManagementTwoPanel: FC = () => {
   const [selectedFishId, setSelectedFishId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isGalleryOpen, setIsGalleryOpen] = useState(false)
-  const [fishImages, setFishImages] = useState<any[]>([])
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false)
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('')
   const [previewImageName, setPreviewImageName] = useState<string>('')
   const [notification, setNotification] = useState<{
@@ -73,6 +75,7 @@ const FishManagementTwoPanel: FC = () => {
     message: string
     type: 'success' | 'error' | 'warning' | 'info'
   }>({ isOpen: false, title: '', message: '', type: 'info' })
+  const [fishImages, setFishImages] = useState<any[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean
     fishId: string | null
@@ -450,7 +453,7 @@ const FishManagementTwoPanel: FC = () => {
               {/* Class Filter Pills */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-gray-700">Filter by Water Type</label>
+                  <label className="text-sm font-medium text-gray-700">Filter by Class</label>
                   <div className="flex gap-2">
                     {['All', 'Fresh', 'Salt'].map((filter) => (
                       <button
@@ -752,11 +755,12 @@ const FishManagementTwoPanel: FC = () => {
                           </div>
                           <div className="col-span-3">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Water Type *
+                              Class *
                             </label>
                             <select 
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                               value={selectedFish?.class || 'Fresh'}
+                              onChange={(e) => handleFieldChange('class', e.target.value)}
                             >
                               <option value="Fresh">Fresh Water</option>
                               <option value="Salt">Salt Water</option>
@@ -839,10 +843,18 @@ const FishManagementTwoPanel: FC = () => {
                           <div className="col-span-5">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Range/Distribution
+                              <button
+                                type="button"
+                                onClick={() => setIsMapModalOpen(true)}
+                                className="text-blue-500 hover:text-blue-700 transition-colors ml-2"
+                                title="View distribution map"
+                              >
+                                <Globe2 className="w-4 h-4" />
+                              </button>
                             </label>
                             <textarea
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
-                              rows={2}
+                              rows={3}
                               value={selectedFish?.range_distribution || ''}
                               placeholder="Geographic distribution"
                             />
@@ -1007,7 +1019,7 @@ const FishManagementTwoPanel: FC = () => {
         onUploadImages={uploadImagesMutation}
         onPreviewImage={(image) => {
           setPreviewImageUrl(image.url || image.image || '')
-          setPreviewImageName(image.filename || fishName || 'Fish image')
+          setPreviewImageName(image.filename || selectedFish?.common_name || 'Fish image')
           setIsImagePreviewOpen(true)
         }}
       />
@@ -1018,6 +1030,12 @@ const FishManagementTwoPanel: FC = () => {
         imageUrl={previewImageUrl}
         imageName={previewImageName}
         onClose={() => setIsImagePreviewOpen(false)}
+      />
+      
+      <USMapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        rangeDistribution={selectedFish?.range_distribution || ''}
       />
     </div>
   )

@@ -4,6 +4,8 @@ import { supabase } from '../services/supabase'
 import { FishSpecies } from '../types/fish'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
+import { Map } from 'lucide-react'
+import USMapModal from '../components/USMapModal'
 
 interface SortOption {
   label: string
@@ -44,6 +46,7 @@ const FishRecordManager: FC = () => {
   const [imageModalOpen, setImageModalOpen] = useState(false)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [mapModalOpen, setMapModalOpen] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -468,10 +471,20 @@ const FishRecordManager: FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                         Range/Distribution
+                        <button
+                          type="button"
+                          onClick={() => setMapModalOpen(true)}
+                          className="text-blue-500 hover:text-blue-700 transition-colors"
+                          title="View distribution map"
+                        >
+                          <Map className="w-4 h-4" />
+                        </button>
                       </label>
-                      <Input
+                      <textarea
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        rows={3}
                         value={formData.range_distribution || ''}
                         onChange={(e) => handleFieldChange('range_distribution', e.target.value)}
                       />
@@ -676,6 +689,12 @@ const UploadModal: FC<UploadModalProps> = ({ isOpen, fishId, onClose, onUploadSu
           Image upload functionality coming soon...
         </div>
       </div>
+      
+      <USMapModal
+        isOpen={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        rangeDistribution={formData.range_distribution || ''}
+      />
     </div>
   )
 }

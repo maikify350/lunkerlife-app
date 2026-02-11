@@ -47,7 +47,7 @@ const Dashboard = () => {
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🐟 LuckerLife Fish Database
+            🐟 LunkerLife Fish Database
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Internal tool for managing fish reference data and images for mobile app seeding
@@ -215,7 +215,7 @@ const Dashboard = () => {
 
         {/* Footer */}
         <footer className="text-center mt-12 text-gray-500">
-          <p>LuckerLife Fish Database Management Tool</p>
+          <p>LunkerLife Fish Database Management Tool</p>
           <p className="text-sm">B.L.A.S.T. + A.N.T. Architecture | Built with React + TypeScript + Supabase</p>
         </footer>
       </div>
