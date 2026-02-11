@@ -150,14 +150,20 @@ const FishManagementTwoPanel: FC = () => {
         .from('fish_images')
         .select('*')
         .eq('fish_id', selectedFishId)
-        .order('created_at', { ascending: false })
+        .order('created_dt', { ascending: false })
 
       if (error) {
         console.error('Error fetching fish images:', error)
         return []
       }
 
-      return data || []
+      // Generate public URLs from storage_path
+      const imagesWithUrls = (data || []).map(img => ({
+        ...img,
+        url: supabase.storage.from('fish-images').getPublicUrl(img.storage_path).data.publicUrl
+      }))
+
+      return imagesWithUrls
     },
     enabled: !!selectedFishId,
     retry: 1,
@@ -224,7 +230,8 @@ const FishManagementTwoPanel: FC = () => {
           fish_id: selectedFishId,
           storage_path: filePath,
           filename: file.name,
-          url: publicUrl,
+          original_filename: file.name,
+          mime_type: file.type,
           file_size: file.size,
           is_default: fishImages.length === 0, // First image is default
           status: 'active'
@@ -237,7 +244,11 @@ const FishManagementTwoPanel: FC = () => {
         continue
       }
 
-      uploadedImages.push(insertData)
+      // Add the public URL to the returned data
+      uploadedImages.push({
+        ...insertData,
+        url: publicUrl
+      })
     }
 
     if (uploadedImages.length > 0) {
