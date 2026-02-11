@@ -81,17 +81,17 @@ const FishManagementTwoPanel: FC = () => {
     fishId: string | null
     fishName: string
   }>({ isOpen: false, fishId: null, fishName: '' })
-  
+
   // Use shared selection context
   const { selectedFishIds: selectedRows, setSelectedFishIds: setSelectedRows } = useSelection()
 
   // Ref for fish list container to enable auto-scrolling
   const fishListRef = useRef<HTMLDivElement>(null)
 
-  const { 
-    data: species = [], 
-    isLoading, 
-    error 
+  const {
+    data: species = [],
+    isLoading,
+    error
   } = useQuery({
     queryKey: ['fish-species', searchTerm, classFilter, sortOption],
     queryFn: async () => {
@@ -120,12 +120,12 @@ const FishManagementTwoPanel: FC = () => {
       }
 
       const { data, error } = await query.limit(100)
-      
+
       if (error) {
         console.error('Error fetching fish species:', error)
         throw error
       }
-      
+
       return (data as FishSpecies[]) || []
     },
     retry: 1,
@@ -138,18 +138,18 @@ const FishManagementTwoPanel: FC = () => {
     queryKey: ['fish-images', selectedFishId],
     queryFn: async () => {
       if (!selectedFishId) return []
-      
+
       const { data, error } = await supabase
         .from('fish_images')
         .select('*')
         .eq('fish_id', selectedFishId)
         .order('created_at', { ascending: false })
-      
+
       if (error) {
         console.error('Error fetching fish images:', error)
         return []
       }
-      
+
       return data || []
     },
     enabled: !!selectedFishId,
@@ -190,7 +190,7 @@ const FishManagementTwoPanel: FC = () => {
       const filePath = `fish-images/${selectedFishId}/${fileName}`
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('fish-images')
         .upload(filePath, file)
 
@@ -366,15 +366,15 @@ const FishManagementTwoPanel: FC = () => {
   // Handle keyboard navigation in fish list
   const handleFishListKeyDown = (e: React.KeyboardEvent) => {
     if (!species || species.length === 0) return
-    
+
     const currentIndex = selectedFishId ? species.findIndex(fish => fish.id === selectedFishId) : -1
-    
+
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       const nextIndex = currentIndex < species.length - 1 ? currentIndex + 1 : 0
       setSelectedFishId(species[nextIndex].id)
       setIsCreating(false)
-      
+
       // Auto-scroll to keep selected fish in view
       setTimeout(() => {
         scrollToSelectedFish(species[nextIndex].id)
@@ -384,7 +384,7 @@ const FishManagementTwoPanel: FC = () => {
       const prevIndex = currentIndex > 0 ? currentIndex - 1 : species.length - 1
       setSelectedFishId(species[prevIndex].id)
       setIsCreating(false)
-      
+
       // Auto-scroll to keep selected fish in view
       setTimeout(() => {
         scrollToSelectedFish(species[prevIndex].id)
@@ -417,8 +417,8 @@ const FishManagementTwoPanel: FC = () => {
   }
 
   const getInvasiveStatusColor = (invasive: boolean) => {
-    return invasive 
-      ? 'bg-red-100 text-red-800 border-red-200' 
+    return invasive
+      ? 'bg-red-100 text-red-800 border-red-200'
       : 'bg-green-100 text-green-800 border-green-200'
   }
 
@@ -432,7 +432,7 @@ const FishManagementTwoPanel: FC = () => {
             <p className="text-gray-600">Manage fish species data with two-panel workflow</p>
           </div>
           <div className="flex gap-2">
-            <Button 
+            <Button
               onClick={handleCreateNew}
               disabled={isCreating}
               className="bg-ocean-600 hover:bg-ocean-700"
@@ -459,11 +459,10 @@ const FishManagementTwoPanel: FC = () => {
                       <button
                         key={filter}
                         onClick={() => setClassFilter(filter)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                          classFilter === filter
-                            ? 'bg-ocean-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${classFilter === filter
+                          ? 'bg-ocean-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
                       >
                         {filter}
                       </button>
@@ -476,7 +475,7 @@ const FishManagementTwoPanel: FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-medium text-gray-700">Sort by</label>
-                  <select 
+                  <select
                     className="px-3 py-1 border border-gray-300 rounded-md text-sm"
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
@@ -522,7 +521,7 @@ const FishManagementTwoPanel: FC = () => {
           </div>
 
           {/* Fish List */}
-          <div 
+          <div
             ref={fishListRef}
             className="flex-1 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:ring-inset"
             tabIndex={0}
@@ -544,12 +543,11 @@ const FishManagementTwoPanel: FC = () => {
             ) : species && species.length > 0 ? (
               <div className="px-4">
                 {species.map((fish) => (
-                  <div 
+                  <div
                     key={fish.id}
                     data-fish-id={fish.id}
-                    className={`bg-white pl-2 pr-3 py-1 border-b hover:bg-gray-50 transition-colors ${
-                      selectedFishId === fish.id ? 'border-ocean-500 bg-yellow-200' : 'border-gray-200'
-                    }`}
+                    className={`bg-white pl-2 pr-3 py-1 border-b hover:bg-gray-50 transition-colors ${selectedFishId === fish.id ? 'border-ocean-500 bg-yellow-200' : 'border-gray-200'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <input
@@ -566,7 +564,7 @@ const FishManagementTwoPanel: FC = () => {
                         }}
                         className="flex-shrink-0"
                       />
-                      <div 
+                      <div
                         className="flex-1 cursor-pointer"
                         onClick={() => {
                           setSelectedFishId(fish.id)
@@ -580,8 +578,8 @@ const FishManagementTwoPanel: FC = () => {
                         <div className="flex items-center gap-2">
                           {/* Fish thumbnail */}
                           {fish.image_name_location && (
-                            <img 
-                              src={getImageUrl(fish.image_name_location) || ''} 
+                            <img
+                              src={getImageUrl(fish.image_name_location) || ''}
                               alt={fish.common_name}
                               className="w-12 h-8 object-contain bg-gray-100 rounded flex-shrink-0"
                               onError={(e) => {
@@ -595,9 +593,8 @@ const FishManagementTwoPanel: FC = () => {
                           </h4>
                           <div className="flex gap-1 flex-shrink-0">
                             {fish.class && (
-                              <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${
-                                fish.class === 'Fresh' ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800'
-                              }`}>
+                              <span className={`inline-flex px-1.5 py-0.5 text-xs font-medium rounded ${fish.class === 'Fresh' ? 'bg-blue-100 text-blue-800' : 'bg-teal-100 text-teal-800'
+                                }`}>
                                 {fish.class}
                               </span>
                             )}
@@ -642,10 +639,10 @@ const FishManagementTwoPanel: FC = () => {
                       {fishImages.filter(img => img.status !== 'hidden').length || (selectedFish.image ? 1 : 0)}
                     </button>
                   )}
-                  
-                   {/* Fish Image Thumbnail */}
+
+                  {/* Fish Image Thumbnail */}
                   {!isCreating && selectedFish && (
-                    <div 
+                    <div
                       className="bg-gray-200 rounded-lg border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors my-1 ml-2"
                       style={{ width: '130px', height: '90px', paddingLeft: '8px', paddingRight: '8px' }}
                       onDoubleClick={() => {
@@ -658,15 +655,15 @@ const FishManagementTwoPanel: FC = () => {
                       }}
                     >
                       {(fishImages.find(img => img.is_default) || fishImages[0])?.url ? (
-                        <img 
-                          src={(fishImages.find(img => img.is_default) || fishImages[0]).url || (fishImages.find(img => img.is_default) || fishImages[0]).image} 
+                        <img
+                          src={(fishImages.find(img => img.is_default) || fishImages[0]).url || (fishImages.find(img => img.is_default) || fishImages[0]).image}
                           alt={selectedFish.common_name}
                           className="w-full h-full object-contain rounded-lg"
                           style={{ width: '130px', height: '90px' }}
                         />
                       ) : selectedFish.image_name_location ? (
-                        <img 
-                          src={getImageUrl(selectedFish.image_name_location) || ''} 
+                        <img
+                          src={getImageUrl(selectedFish.image_name_location) || ''}
                           alt={selectedFish.common_name}
                           className="w-full h-full object-contain rounded-lg"
                           style={{ width: '130px', height: '90px' }}
@@ -678,7 +675,7 @@ const FishManagementTwoPanel: FC = () => {
                       ) : null}
                     </div>
                   )}
-                  
+
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">
                       {isCreating ? 'Add New Fish Species' : selectedFish?.common_name}
@@ -757,10 +754,10 @@ const FishManagementTwoPanel: FC = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Class *
                             </label>
-                            <select 
+                            <select
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                               value={selectedFish?.class || 'Fresh'}
-                              onChange={(e) => handleFieldChange('class', e.target.value)}
+                              disabled
                             >
                               <option value="Fresh">Fresh Water</option>
                               <option value="Salt">Salt Water</option>
@@ -1006,7 +1003,6 @@ const FishManagementTwoPanel: FC = () => {
         images={fishImages}
         onSetDefault={setDefaultImageMutation}
         onSoftDelete={async (imageId) => {
-          const img = fishImages.find(i => i.id === imageId)
           await softDeleteImageMutation(imageId)
         }}
         onRestore={async (imageId) => {
@@ -1031,7 +1027,7 @@ const FishManagementTwoPanel: FC = () => {
         imageName={previewImageName}
         onClose={() => setIsImagePreviewOpen(false)}
       />
-      
+
       <USMapModal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}

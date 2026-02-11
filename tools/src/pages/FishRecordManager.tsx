@@ -73,19 +73,19 @@ const FishRecordManager: FC = () => {
     queryKey: ['fish-list', activeFilter, sortOption],
     queryFn: async () => {
       const selectedSort = sortOptions.find(opt => opt.value === sortOption)
-      
+
       let query = supabase
         .from('fish_species')
         .select('*')
 
-          // Apply filter (using invasive field since class column may not exist yet)
-          if (activeFilter === 'fresh') {
-            // For now, treat non-invasive as "fresh" until class column is added
-            query = query.eq('invasive', false)
-          } else if (activeFilter === 'salt') {
-            // For now, treat invasive as "salt" until class column is added  
-            query = query.eq('invasive', true)
-          }
+      // Apply filter (using invasive field since class column may not exist yet)
+      if (activeFilter === 'fresh') {
+        // For now, treat non-invasive as "fresh" until class column is added
+        query = query.eq('invasive', false)
+      } else if (activeFilter === 'salt') {
+        // For now, treat invasive as "salt" until class column is added  
+        query = query.eq('invasive', true)
+      }
 
       // Apply sorting
       if (selectedSort) {
@@ -93,12 +93,12 @@ const FishRecordManager: FC = () => {
       }
 
       const { data, error } = await query.limit(200)
-      
+
       if (error) {
         console.error('Error fetching fish list:', error)
         throw error
       }
-      
+
       return data as FishSpecies[]
     },
     enabled: sortOptions.length > 0,
@@ -109,18 +109,18 @@ const FishRecordManager: FC = () => {
     queryKey: ['fish-details', selectedFishId],
     queryFn: async () => {
       if (!selectedFishId) return null
-      
+
       const { data, error } = await supabase
         .from('fish_species')
         .select('*')
         .eq('id', selectedFishId)
         .single()
-      
+
       if (error) {
         console.error('Error fetching fish details:', error)
         throw error
       }
-      
+
       return data as FishSpecies
     },
     enabled: !!selectedFishId,
@@ -138,20 +138,20 @@ const FishRecordManager: FC = () => {
   const saveFishMutation = useMutation({
     mutationFn: async (fishData: Partial<FishSpecies>) => {
       if (!selectedFishId) throw new Error('No fish selected')
-      
+
       const updateData = {
         ...fishData,
         updated_at: new Date().toISOString(),
         updated_by: 'Admin'
       }
-      
+
       const { data, error } = await supabase
         .from('fish_species')
         .update(updateData)
         .eq('id', selectedFishId)
         .select()
         .single()
-      
+
       if (error) throw error
       return data
     },
@@ -206,11 +206,10 @@ const FishRecordManager: FC = () => {
               <button
                 key={filter.key}
                 onClick={() => setActiveFilter(filter.key as 'all' | 'fresh' | 'salt')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  activeFilter === filter.key
-                    ? 'bg-ocean-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeFilter === filter.key
+                  ? 'bg-ocean-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 {filter.label}
               </button>
@@ -251,11 +250,10 @@ const FishRecordManager: FC = () => {
                 <div
                   key={fish.id}
                   onClick={() => handleFishSelect(fish.id)}
-                  className={`p-3 rounded cursor-pointer mb-1 transition-colors ${
-                    selectedFishId === fish.id
-                      ? 'bg-ocean-100 border border-ocean-300'
-                      : 'hover:bg-gray-50'
-                  }`}
+                  className={`p-3 rounded cursor-pointer mb-1 transition-colors ${selectedFishId === fish.id
+                    ? 'bg-ocean-100 border border-ocean-300'
+                    : 'hover:bg-gray-50'
+                    }`}
                 >
                   <div className="font-medium text-gray-900">{fish.common_name}</div>
                   {fish.species && (
@@ -263,7 +261,7 @@ const FishRecordManager: FC = () => {
                   )}
                 </div>
               ))}
-              
+
               {fishList?.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   No fish found for the selected filter
@@ -285,11 +283,10 @@ const FishRecordManager: FC = () => {
                 <Button
                   onClick={handleSave}
                   disabled={!isDirty || saveFishMutation.isPending}
-                  className={`px-6 py-2 rounded-full ${
-                    isDirty
-                      ? 'bg-ocean-600 hover:bg-ocean-700 text-white'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
+                  className={`px-6 py-2 rounded-full ${isDirty
+                    ? 'bg-ocean-600 hover:bg-ocean-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                 >
                   {saveFishMutation.isPending ? 'Saving...' : 'Save'}
                 </Button>
@@ -611,6 +608,13 @@ const FishRecordManager: FC = () => {
           queryClient.invalidateQueries({ queryKey: ['fish-details'] })
         }}
       />
+
+      {/* Map Modal */}
+      <USMapModal
+        isOpen={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        rangeDistribution={formData.range_distribution || ''}
+      />
     </div>
   )
 }
@@ -644,7 +648,7 @@ const ImageModal: FC<ImageModalProps> = ({ isOpen, imageUrl, onClose }) => {
 }
 
 // Image Gallery Component (placeholder)
-const ImageGallery: FC<ImageGalleryProps> = ({ isOpen, fishId, onClose, onImageSelect }) => {
+const ImageGallery: FC<ImageGalleryProps> = ({ isOpen, fishId: _fishId, onClose, onImageSelect: _onImageSelect }) => {
   if (!isOpen) return null
 
   return (
@@ -669,7 +673,7 @@ const ImageGallery: FC<ImageGalleryProps> = ({ isOpen, fishId, onClose, onImageS
 }
 
 // Upload Modal Component (placeholder)
-const UploadModal: FC<UploadModalProps> = ({ isOpen, fishId, onClose, onUploadSuccess }) => {
+const UploadModal: FC<UploadModalProps> = ({ isOpen, fishId: _fishId, onClose, onUploadSuccess: _onUploadSuccess }) => {
   if (!isOpen) return null
 
   return (
@@ -689,12 +693,6 @@ const UploadModal: FC<UploadModalProps> = ({ isOpen, fishId, onClose, onUploadSu
           Image upload functionality coming soon...
         </div>
       </div>
-      
-      <USMapModal
-        isOpen={mapModalOpen}
-        onClose={() => setMapModalOpen(false)}
-        rangeDistribution={formData.range_distribution || ''}
-      />
     </div>
   )
 }
