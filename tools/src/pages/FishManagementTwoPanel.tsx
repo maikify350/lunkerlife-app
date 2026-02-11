@@ -161,6 +161,37 @@ const FishManagementTwoPanel: FC = () => {
 
   const selectedFish = species?.find(fish => fish.id === selectedFishId)
 
+  // Query to fetch uploaded image thumbnails for the fish list
+  const { data: uploadedThumbnails } = useQuery({
+    queryKey: ['fish-thumbnails', species?.map(f => f.id).join(',')],
+    queryFn: async () => {
+      if (!species || species.length === 0) return {}
+
+      const { data, error } = await supabase
+        .from('fish_images')
+        .select('fish_id, storage_path, is_default')
+        .eq('status', 'active')
+
+      if (error) {
+        console.error('Error fetching thumbnails:', error)
+        return {}
+      }
+
+      // Build a map of fish_id -> first/default image URL
+      const thumbnailMap: Record<string, string> = {}
+      for (const img of data || []) {
+        // Prefer default image, but use first found if no default set
+        if (!thumbnailMap[img.fish_id] || img.is_default) {
+          thumbnailMap[img.fish_id] = supabase.storage
+            .from('fish-images')
+            .getPublicUrl(img.storage_path).data.publicUrl
+        }
+      }
+      return thumbnailMap
+    },
+    enabled: !!species && species.length > 0,
+  })
+
   // Query to fetch fish images when a fish is selected
   const { data: fishImagesData } = useQuery({
     queryKey: ['fish-images', selectedFishId],
@@ -632,7 +663,7 @@ const FishManagementTwoPanel: FC = () => {
                         <div className="flex items-center gap-2">
                           {/* Fish thumbnail - always show either real image or placeholder */}
                           <img
-                            src={fish.image_name_location ? getImageUrl(fish.image_name_location) || '/noimage.png' : '/noimage.png'}
+                            src={fish.image_name_location ? getImageUrl(fish.image_name_location) || '/noimage.png' : (uploadedThumbnails?.[fish.id] || '/noimage.png')}
                             alt={fish.common_name}
                             className="w-12 h-8 object-contain bg-gray-100 rounded flex-shrink-0"
                             onError={(e) => {
