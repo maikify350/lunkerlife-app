@@ -126,7 +126,7 @@ const FishManagementTwoPanel: FC = () => {
         query = query.order('avg_adult_length_inches', { ascending: true }).order('common_name')
       }
 
-      const { data, error } = await query.limit(100)
+      const { data, error } = await query.limit(500)
 
       if (error) {
         console.error('Error fetching fish species:', error)
