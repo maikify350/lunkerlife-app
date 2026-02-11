@@ -62,6 +62,8 @@ const FishManagementTwoPanel: FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [classFilter, setClassFilter] = useState<string>('All')
   const [sortOption, setSortOption] = useState<string>('common_name')
+  const [showOnlyMissingImages, setShowOnlyMissingImages] = useState(false)
+  const [brokenImageFishIds, setBrokenImageFishIds] = useState<Set<string>>(new Set())
   const [selectedFishId, setSelectedFishId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isGalleryOpen, setIsGalleryOpen] = useState(false)
@@ -93,7 +95,7 @@ const FishManagementTwoPanel: FC = () => {
     isLoading,
     error
   } = useQuery({
-    queryKey: ['fish-species', searchTerm, classFilter, sortOption],
+    queryKey: ['fish-species', searchTerm, classFilter, sortOption, showOnlyMissingImages, Array.from(brokenImageFishIds).sort().join(',')],
     queryFn: async () => {
       let query = supabase
         .from('fish_species')
@@ -107,6 +109,11 @@ const FishManagementTwoPanel: FC = () => {
         query = query.eq('class', 'Fresh')
       } else if (classFilter === 'Salt') {
         query = query.eq('class', 'Salt')
+      }
+
+      // Filter for fish without images
+      if (showOnlyMissingImages) {
+        query = query.or('image.is.null,image_name_location.is.null')
       }
 
       if (sortOption === 'common_name') {
@@ -423,7 +430,7 @@ const FishManagementTwoPanel: FC = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex justify-between items-center">
@@ -446,13 +453,13 @@ const FishManagementTwoPanel: FC = () => {
       {/* Two Panel Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT PANEL - Fish List & Search */}
-        <div className="flex-shrink-0 border-r border-gray-200 bg-gray-50 flex flex-col" style={{ width: '404px' }}>
+        <div className="flex-shrink-0 border-r border-gray-200 bg-gray-50 flex flex-col min-h-0" style={{ width: '404px' }}>
           {/* Search & Filters */}
-          <div className="p-4 bg-white border-b border-gray-200">
-            <div className="space-y-4">
+          <div className="flex-shrink-0 p-4 bg-white border-b border-gray-200">
+            <div className="space-y-0.5">
               {/* Class Filter Pills */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-medium text-gray-700">Filter by Class</label>
                   <div className="flex gap-2">
                     {['All', 'Fresh', 'Salt'].map((filter) => (
@@ -486,6 +493,21 @@ const FishManagementTwoPanel: FC = () => {
                     <option value="size">Size (Length)</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Missing Images Filter */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyMissingImages}
+                    onChange={(e) => setShowOnlyMissingImages(e.target.checked)}
+                    className="w-4 h-4 text-ocean-600 border-gray-300 rounded focus:ring-ocean-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Show only fish without/broken images
+                  </span>
+                </label>
               </div>
 
               {/* Search Input */}
@@ -523,7 +545,7 @@ const FishManagementTwoPanel: FC = () => {
           {/* Fish List */}
           <div
             ref={fishListRef}
-            className="flex-1 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:ring-inset"
+            className="flex-1 min-h-0 overflow-y-auto focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:ring-inset"
             tabIndex={0}
             onKeyDown={handleFishListKeyDown}
           >
@@ -541,12 +563,12 @@ const FishManagementTwoPanel: FC = () => {
                 <p>Error loading fish data</p>
               </div>
             ) : species && species.length > 0 ? (
-              <div className="px-4">
+              <div className="px-4 pb-8">
                 {species.map((fish) => (
                   <div
                     key={fish.id}
                     data-fish-id={fish.id}
-                    className={`bg-white pl-2 pr-3 py-1 border-b hover:bg-gray-50 transition-colors ${selectedFishId === fish.id ? 'border-ocean-500 bg-yellow-200' : 'border-gray-200'
+                    className={`bg-white pl-2 pr-3 py-0.5 border-b hover:bg-gray-50 transition-colors ${selectedFishId === fish.id ? 'border-ocean-500 bg-yellow-200' : 'border-gray-200'
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -576,18 +598,18 @@ const FishManagementTwoPanel: FC = () => {
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          {/* Fish thumbnail */}
-                          {fish.image_name_location && (
-                            <img
-                              src={getImageUrl(fish.image_name_location) || ''}
-                              alt={fish.common_name}
-                              className="w-12 h-8 object-contain bg-gray-100 rounded flex-shrink-0"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                              }}
-                            />
-                          )}
+                          {/* Fish thumbnail - always show either real image or placeholder */}
+                          <img
+                            src={fish.image_name_location ? getImageUrl(fish.image_name_location) || '/noimage.png' : '/noimage.png'}
+                            alt={fish.common_name}
+                            className="w-12 h-8 object-contain bg-gray-100 rounded flex-shrink-0"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/noimage.png'
+                              // Track this fish as having a broken image
+                              setBrokenImageFishIds(prev => new Set(prev).add(fish.id))
+                            }}
+                          />
                           <h4 className="font-medium text-gray-900 text-sm flex-1">
                             {fish.common_name}
                           </h4>
