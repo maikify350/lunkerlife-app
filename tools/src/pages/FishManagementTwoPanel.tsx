@@ -111,7 +111,7 @@ const FishManagementTwoPanel: FC = () => {
         query = query.eq('class', 'Salt')
       }
 
-      // Filter for fish without images
+      // Filter for fish without images (initial DB filter for legacy fields)
       if (showOnlyMissingImages) {
         query = query.or('image.is.null,image_name_location.is.null')
       }
@@ -133,7 +133,28 @@ const FishManagementTwoPanel: FC = () => {
         throw error
       }
 
-      return (data as FishSpecies[]) || []
+      let results = (data as FishSpecies[]) || []
+
+      // If filtering for missing images, also exclude fish that have uploaded images in fish_images table
+      if (showOnlyMissingImages && results.length > 0) {
+        const { data: fishWithImages } = await supabase
+          .from('fish_images')
+          .select('fish_id')
+          .eq('status', 'active')
+
+        const fishIdsWithUploadedImages = new Set(fishWithImages?.map(img => img.fish_id) || [])
+
+        results = results.filter(fish => {
+          const hasUploadedImage = fishIdsWithUploadedImages.has(fish.id)
+          const hasBrokenImage = brokenImageFishIds.has(fish.id)
+
+          // Keep fish that: has no uploaded image AND (has broken image OR truly missing)
+          if (hasUploadedImage && !hasBrokenImage) return false // has working uploaded image, exclude
+          return true
+        })
+      }
+
+      return results
     },
     retry: 1,
   })
