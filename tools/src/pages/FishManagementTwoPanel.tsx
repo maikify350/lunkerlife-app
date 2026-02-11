@@ -663,7 +663,7 @@ const FishManagementTwoPanel: FC = () => {
                         <div className="flex items-center gap-2">
                           {/* Fish thumbnail - always show either real image or placeholder */}
                           <img
-                            src={fish.image_name_location ? getImageUrl(fish.image_name_location) || '/noimage.png' : (uploadedThumbnails?.[fish.id] || '/noimage.png')}
+                            src={uploadedThumbnails?.[fish.id] || (fish.image_name_location ? getImageUrl(fish.image_name_location) || '/noimage.png' : '/noimage.png')}
                             alt={fish.common_name}
                             className="w-12 h-8 object-contain bg-gray-100 rounded flex-shrink-0"
                             onError={(e) => {
