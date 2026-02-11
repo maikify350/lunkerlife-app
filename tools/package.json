@@ -1,5 +1,5 @@
 {
-  "name": "luckerlife-fish-database",
+  "name": "LunkerLife",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -17,6 +17,7 @@
     "@types/jspdf": "^1.3.3",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
+    "lucide-react": "^0.562.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
