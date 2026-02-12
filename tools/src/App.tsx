@@ -7,6 +7,7 @@ import FishSpeciesNew from './pages/FishSpeciesNew'
 import FishManagementTwoPanel from './pages/FishManagementTwoPanel'
 import DatabaseTest from './pages/DatabaseTest'
 import ImportData from './pages/ImportData'
+import ExportData from './pages/ExportData'
 import Reports from './pages/Reports'
 import { SelectionProvider } from './contexts/SelectionContext'
 import './App.css'
@@ -28,14 +29,14 @@ const App: FC = () => {
         <Router>
           <Layout>
             <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/species" element={<FishManagementTwoPanel />} />
-            <Route path="/species-cards" element={<FishSpeciesNew />} />
-            <Route path="/test-db" element={<DatabaseTest />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/import" element={<ImportData />} />
-            <Route path="/export" element={<div className="text-center py-8"><h2 className="text-2xl font-bold">Data Export - Coming Soon</h2><p className="text-gray-600 mt-2">JSON/CSV export for mobile app seeding</p></div>} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/species" element={<FishManagementTwoPanel />} />
+              <Route path="/species-cards" element={<FishSpeciesNew />} />
+              <Route path="/test-db" element={<DatabaseTest />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/import" element={<ImportData />} />
+              <Route path="/export" element={<ExportData />} />
             </Routes>
           </Layout>
         </Router>
