@@ -1,5 +1,5 @@
 import { FC, useState, useRef, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../services/supabase'
 import { Card, CardContent } from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -86,6 +86,13 @@ const FishManagementTwoPanel: FC = () => {
 
   // Use shared selection context
   const { selectedFishIds: selectedRows, setSelectedFishIds: setSelectedRows } = useSelection()
+
+  const queryClient = useQueryClient()
+
+  // Edit form state
+  const [editFormData, setEditFormData] = useState<Partial<FishSpecies>>({})
+  const [isDirty, setIsDirty] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Ref for fish list container to enable auto-scrolling
   const fishListRef = useRef<HTMLDivElement>(null)
@@ -478,6 +485,73 @@ const FishManagementTwoPanel: FC = () => {
     setIsCreating(true)
   }
 
+  // Sync editFormData when selected fish changes
+  useEffect(() => {
+    if (selectedFish) {
+      setEditFormData({ ...selectedFish })
+      setIsDirty(false)
+    } else {
+      setEditFormData({})
+      setIsDirty(false)
+    }
+  }, [selectedFishId, selectedFish])
+
+  // Helper to update a field in editFormData
+  const updateField = (field: keyof FishSpecies, value: any) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }))
+    setIsDirty(true)
+  }
+
+  // Save handler
+  const handleSave = async () => {
+    if (!selectedFishId || !editFormData) return
+
+    setIsSaving(true)
+    try {
+      const { id, created_at, updated_at, ...updateData } = editFormData as any
+
+      const { error } = await supabase
+        .from('fish_species')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedFishId)
+
+      if (error) {
+        console.error('Error saving fish:', error)
+        setNotification({
+          isOpen: true,
+          title: 'Save Failed',
+          message: `Failed to save changes: ${error.message}`,
+          type: 'error'
+        })
+        return
+      }
+
+      setIsDirty(false)
+      setNotification({
+        isOpen: true,
+        title: 'Saved Successfully',
+        message: `${editFormData.common_name || 'Fish'} has been updated.`,
+        type: 'success'
+      })
+
+      // Refresh the species list
+      queryClient.invalidateQueries({ queryKey: ['fish-species'] })
+    } catch (err) {
+      console.error('Error saving fish:', err)
+      setNotification({
+        isOpen: true,
+        title: 'Save Failed',
+        message: 'An unexpected error occurred while saving.',
+        type: 'error'
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const confirmDelete = () => {
     if (deleteConfirm.fishId) {
       setSelectedFishId(null)
@@ -775,7 +849,7 @@ const FishManagementTwoPanel: FC = () => {
               {/* Form Content */}
               <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="px-6 py-1 pb-20 w-full bg-blue-50">
-                  <form className="space-y-2 w-full">
+                  <form className="space-y-2 w-full" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                     {/* Description - Moved to Top */}
                     <Card>
                       <CardContent className="space-y-1 py-1">
@@ -786,7 +860,8 @@ const FishManagementTwoPanel: FC = () => {
                           <textarea
                             className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                             rows={5}
-                            value={selectedFish?.description || ''}
+                            value={editFormData.description || ''}
+                            onChange={(e) => updateField('description', e.target.value)}
                             placeholder="General description of the fish..."
                           />
                         </div>
@@ -797,7 +872,8 @@ const FishManagementTwoPanel: FC = () => {
                               Common Name *
                             </label>
                             <Input
-                              value={selectedFish?.common_name || ''}
+                              value={editFormData.common_name || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('common_name', e.target.value)}
                               placeholder="e.g., Largemouth Bass"
                               className="!h-auto !py-0.5"
                             />
@@ -808,7 +884,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.species || ''}
+                              value={editFormData.species || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('species', e.target.value)}
                               placeholder="e.g., Micropterus salmoides"
                             />
                           </div>
@@ -818,7 +895,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.also_known_as || ''}
+                              value={editFormData.also_known_as || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('also_known_as', e.target.value)}
                               placeholder="e.g., Black Bass, Green Trout, Bigmouth Bass, Bucket Mouth"
                             />
                           </div>
@@ -831,7 +909,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.family || ''}
+                              value={editFormData.family || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('family', e.target.value)}
                               placeholder="e.g., Centrarchidae"
                             />
                           </div>
@@ -841,8 +920,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <select
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
-                              value={selectedFish?.class || 'Fresh'}
-                              disabled
+                              value={editFormData.class || 'Fresh'}
+                              onChange={(e) => updateField('class', e.target.value)}
                             >
                               <option value="Fresh">Fresh Water</option>
                               <option value="Salt">Salt Water</option>
@@ -854,7 +933,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.environmental_status || ''}
+                              value={editFormData.environmental_status || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('environmental_status', e.target.value)}
                               placeholder="e.g., Least Concern"
                             />
                           </div>
@@ -862,8 +942,8 @@ const FishManagementTwoPanel: FC = () => {
                             <input
                               type="checkbox"
                               id="invasive"
-                              checked={selectedFish?.invasive === true}
-                              readOnly
+                              checked={editFormData.invasive === true}
+                              onChange={(e) => updateField('invasive', e.target.checked)}
                               className="w-5 h-5 mr-2 rounded border-gray-300"
                             />
                             <label htmlFor="invasive" className="text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -881,7 +961,8 @@ const FishManagementTwoPanel: FC = () => {
                               className="!h-auto !py-0.5"
                               type="number"
                               step="0.1"
-                              value={selectedFish?.avg_adult_length_inches || ''}
+                              value={editFormData.avg_adult_length_inches || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('avg_adult_length_inches', e.target.value ? parseFloat(e.target.value) : null)}
                               placeholder="e.g., 15.5"
                             />
                           </div>
@@ -893,7 +974,8 @@ const FishManagementTwoPanel: FC = () => {
                               className="!h-auto !py-0.5"
                               type="number"
                               step="0.1"
-                              value={selectedFish?.avg_adult_weight_lbs || ''}
+                              value={editFormData.avg_adult_weight_lbs || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('avg_adult_weight_lbs', e.target.value ? parseFloat(e.target.value) : null)}
                               placeholder="e.g., 3.5"
                             />
                           </div>
@@ -903,7 +985,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.world_record || ''}
+                              value={editFormData.world_record || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('world_record', e.target.value)}
                               placeholder="e.g., 22 lbs 4 oz - Georgia, 1932"
                             />
                           </div>
@@ -916,7 +999,8 @@ const FishManagementTwoPanel: FC = () => {
                           <textarea
                             className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                             rows={3}
-                            value={selectedFish?.known_for || ''}
+                            value={editFormData.known_for || ''}
+                            onChange={(e) => updateField('known_for', e.target.value)}
                             placeholder="What is this fish particularly known for?"
                           />
                         </div>
@@ -937,7 +1021,8 @@ const FishManagementTwoPanel: FC = () => {
                             <textarea
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                               rows={3}
-                              value={selectedFish?.range_distribution || ''}
+                              value={editFormData.range_distribution || ''}
+                              onChange={(e) => updateField('range_distribution', e.target.value)}
                               placeholder="Geographic distribution"
                             />
                           </div>
@@ -947,7 +1032,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.water_body_type || ''}
+                              value={editFormData.water_body_type || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('water_body_type', e.target.value)}
                               placeholder="e.g., Lake, River"
                             />
                           </div>
@@ -957,7 +1043,8 @@ const FishManagementTwoPanel: FC = () => {
                             </label>
                             <Input
                               className="!h-auto !py-0.5"
-                              value={selectedFish?.image_name_location || ''}
+                              value={editFormData.image_name_location || ''}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('image_name_location', e.target.value)}
                               placeholder="e.g., Bass-Largemouth.png"
                             />
                           </div>
@@ -970,7 +1057,8 @@ const FishManagementTwoPanel: FC = () => {
                           <textarea
                             className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                             rows={3}
-                            value={selectedFish?.habitat || ''}
+                            value={editFormData.habitat || ''}
+                            onChange={(e) => updateField('habitat', e.target.value)}
                             placeholder="Describe the preferred habitat..."
                           />
                         </div>
@@ -983,7 +1071,8 @@ const FishManagementTwoPanel: FC = () => {
                             <textarea
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                               rows={2}
-                              value={selectedFish?.diet_feeding_habits || ''}
+                              value={editFormData.diet_feeding_habits || ''}
+                              onChange={(e) => updateField('diet_feeding_habits', e.target.value)}
                               placeholder="What does this fish eat and how does it feed?"
                             />
                           </div>
@@ -994,7 +1083,8 @@ const FishManagementTwoPanel: FC = () => {
                             <textarea
                               className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                               rows={2}
-                              value={selectedFish?.spawning_habits_lifecycle || ''}
+                              value={editFormData.spawning_habits_lifecycle || ''}
+                              onChange={(e) => updateField('spawning_habits_lifecycle', e.target.value)}
                               placeholder="Reproductive behavior and lifecycle information..."
                             />
                           </div>
@@ -1007,7 +1097,8 @@ const FishManagementTwoPanel: FC = () => {
                           <textarea
                             className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
                             rows={2}
-                            value={selectedFish?.fishing_techniques || ''}
+                            value={editFormData.fishing_techniques || ''}
+                            onChange={(e) => updateField('fishing_techniques', e.target.value)}
                             placeholder="How to catch this fish, preferred baits, techniques..."
                           />
                         </div>
@@ -1035,6 +1126,30 @@ const FishManagementTwoPanel: FC = () => {
                         <span>No audit information available</span>
                       )}
                     </div>
+                    {/* Save Button Bar */}
+                    {isDirty && (
+                      <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 px-4 flex justify-end gap-2 shadow-lg rounded-b-lg -mx-4 mt-4">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            if (selectedFish) {
+                              setEditFormData({ ...selectedFish })
+                              setIsDirty(false)
+                            }
+                          }}
+                          className="bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSaving}
+                          className="bg-ocean-600 hover:bg-ocean-700"
+                        >
+                          {isSaving ? '💾 Saving...' : '💾 Save Changes'}
+                        </Button>
+                      </div>
+                    )}
                   </form>
                 </div>
               </div>
