@@ -1030,10 +1030,11 @@ const FishManagementTwoPanel: FC = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Water Body Type
                             </label>
-                            <Input
-                              className="!h-auto !py-0.5"
+                            <textarea
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              rows={3}
                               value={editFormData.water_body_type || ''}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('water_body_type', e.target.value)}
+                              onChange={(e) => updateField('water_body_type', e.target.value)}
                               placeholder="e.g., Lake, River"
                             />
                           </div>
