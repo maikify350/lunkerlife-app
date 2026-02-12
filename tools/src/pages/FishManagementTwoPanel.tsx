@@ -312,6 +312,28 @@ const FishManagementTwoPanel: FC = () => {
 
     if (uploadedImages.length > 0) {
       setFishImages(prev => [...uploadedImages, ...prev])
+
+      // Auto-update image_name_location if it's empty
+      if (!selectedFish?.image_name_location) {
+        const defaultImage = uploadedImages[0]
+        await supabase
+          .from('fish_species')
+          .update({
+            image_name_location: defaultImage.filename || defaultImage.original_filename,
+            image: defaultImage.filename || defaultImage.original_filename,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedFishId)
+
+        // Also update the edit form
+        setEditFormData(prev => ({
+          ...prev,
+          image_name_location: defaultImage.filename || defaultImage.original_filename,
+          image: defaultImage.filename || defaultImage.original_filename
+        }))
+        queryClient.invalidateQueries({ queryKey: ['fish-species'] })
+      }
+
       setNotification({
         isOpen: true,
         title: 'Upload Successful',
