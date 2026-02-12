@@ -2,6 +2,7 @@ import { FC, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import { supabase } from '../services/supabase'
+import * as XLSX from 'xlsx'
 
 // Exact column names from fish_species table (editable fields only, in DB order)
 const TEMPLATE_COLUMNS = [
@@ -38,51 +39,101 @@ const escapeCSV = (value: any): string => {
     return str
 }
 
+// Helper: trigger file download
+const downloadFile = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+}
+
+// Helper: build Excel workbook from data array
+const buildWorkbook = (data: Record<string, any>[]) => {
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(data, { header: TEMPLATE_COLUMNS })
+    // Set column widths for better readability
+    ws['!cols'] = TEMPLATE_COLUMNS.map(col => {
+        if (col === 'description' || col === 'habitat' || col === 'known_for') return { wch: 50 }
+        if (col === 'common_name' || col === 'range_distribution') return { wch: 30 }
+        return { wch: 20 }
+    })
+    XLSX.utils.book_append_sheet(wb, ws, 'fish_species')
+    return wb
+}
+
 const ExportData: FC = () => {
     const [isExporting, setIsExporting] = useState(false)
 
-    // Download blank template (headers only)
-    const downloadBlankTemplate = (format: 'csv' | 'xlsx') => {
+    // === BLANK TEMPLATE DOWNLOADS ===
+
+    const downloadBlankCSV = () => {
         const headerRow = TEMPLATE_COLUMNS.join(',')
         const blob = new Blob([headerRow + '\n'], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `fish_species_template.${format === 'xlsx' ? 'csv' : 'csv'}`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+        downloadFile(blob, 'fish_species_template.csv')
     }
 
-    // Download current data as CSV
+    const downloadBlankExcel = () => {
+        // Create an empty row so the sheet has headers
+        const emptyRow: Record<string, any> = {}
+        TEMPLATE_COLUMNS.forEach(col => { emptyRow[col] = '' })
+        const wb = buildWorkbook([emptyRow])
+        // Remove the empty data row, keeping only headers
+        const ws = wb.Sheets['fish_species']
+        ws['!ref'] = XLSX.utils.encode_range({ s: { c: 0, r: 0 }, e: { c: TEMPLATE_COLUMNS.length - 1, r: 0 } })
+        const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+        const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        downloadFile(blob, 'fish_species_template.xlsx')
+    }
+
+    // === DATA EXPORT DOWNLOADS ===
+
+    const fetchFishData = async () => {
+        const { data, error } = await supabase
+            .from('fish_species')
+            .select('*')
+            .order('common_name')
+        if (error) throw error
+        // Map to only template columns
+        return (data || []).map(fish => {
+            const row: Record<string, any> = {}
+            TEMPLATE_COLUMNS.forEach(col => { row[col] = (fish as any)[col] ?? '' })
+            return row
+        })
+    }
+
     const downloadDataCSV = async () => {
         setIsExporting(true)
         try {
-            const { data, error } = await supabase
-                .from('fish_species')
-                .select('*')
-                .order('common_name')
-
-            if (error) throw error
-
-            // Build CSV with headers
+            const fishData = await fetchFishData()
             const rows = [TEMPLATE_COLUMNS.join(',')]
-            for (const fish of data || []) {
-                const row = TEMPLATE_COLUMNS.map(col => escapeCSV((fish as any)[col]))
+            for (const fish of fishData) {
+                const row = TEMPLATE_COLUMNS.map(col => escapeCSV(fish[col]))
                 rows.push(row.join(','))
             }
-
             const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-            link.download = `fish_species_export_${timestamp}.csv`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
+            downloadFile(blob, `fish_species_export_${timestamp}.csv`)
+        } catch (err) {
+            console.error('Export error:', err)
+            alert('Failed to export data. Check console for details.')
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
+    const downloadDataExcel = async () => {
+        setIsExporting(true)
+        try {
+            const fishData = await fetchFishData()
+            const wb = buildWorkbook(fishData)
+            const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+            const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+            downloadFile(blob, `fish_species_export_${timestamp}.xlsx`)
         } catch (err) {
             console.error('Export error:', err)
             alert('Failed to export data. Check console for details.')
@@ -107,7 +158,7 @@ const ExportData: FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-gray-600 text-sm">
-                        Download an empty CSV file with <strong>only the column headers</strong> from the current Supabase
+                        Download an empty file with <strong>only the column headers</strong> from the current Supabase
                         <code className="mx-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">fish_species</code>
                         table. Fill it in and upload via the Import page — all columns will map correctly.
                     </p>
@@ -134,10 +185,16 @@ const ExportData: FC = () => {
 
                     <div className="flex gap-3">
                         <Button
-                            onClick={() => downloadBlankTemplate('csv')}
+                            onClick={downloadBlankCSV}
                             className="bg-ocean-600 hover:bg-ocean-700"
                         >
-                            📥 Download Blank CSV Template
+                            📥 Blank Template (CSV)
+                        </Button>
+                        <Button
+                            onClick={downloadBlankExcel}
+                            className="bg-green-700 hover:bg-green-800"
+                        >
+                            📥 Blank Template (Excel)
                         </Button>
                     </div>
                 </CardContent>
@@ -152,7 +209,7 @@ const ExportData: FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-gray-600 text-sm">
-                        Export all current fish species data as a CSV file. Uses the same column structure as the blank template,
+                        Export all current fish species data. Uses the same column structure as the blank template,
                         so you can edit the exported file and re-import it.
                     </p>
 
@@ -160,9 +217,16 @@ const ExportData: FC = () => {
                         <Button
                             onClick={downloadDataCSV}
                             disabled={isExporting}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-ocean-600 hover:bg-ocean-700"
                         >
-                            {isExporting ? '⏳ Exporting...' : '📤 Export All Fish Data (CSV)'}
+                            {isExporting ? '⏳ Exporting...' : '📤 Export Data (CSV)'}
+                        </Button>
+                        <Button
+                            onClick={downloadDataExcel}
+                            disabled={isExporting}
+                            className="bg-green-700 hover:bg-green-800"
+                        >
+                            {isExporting ? '⏳ Exporting...' : '📤 Export Data (Excel)'}
                         </Button>
                     </div>
                 </CardContent>
