@@ -858,7 +858,7 @@ const FishManagementTwoPanel: FC = () => {
                             Description
                           </label>
                           <textarea
-                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                             rows={5}
                             value={editFormData.description || ''}
                             onChange={(e) => updateField('description', e.target.value)}
@@ -919,7 +919,7 @@ const FishManagementTwoPanel: FC = () => {
                               Class *
                             </label>
                             <select
-                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                               value={editFormData.class || 'Fresh'}
                               onChange={(e) => updateField('class', e.target.value)}
                             >
@@ -997,7 +997,7 @@ const FishManagementTwoPanel: FC = () => {
                             Known For
                           </label>
                           <textarea
-                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                             rows={3}
                             value={editFormData.known_for || ''}
                             onChange={(e) => updateField('known_for', e.target.value)}
@@ -1019,7 +1019,7 @@ const FishManagementTwoPanel: FC = () => {
                               </button>
                             </label>
                             <textarea
-                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                               rows={3}
                               value={editFormData.range_distribution || ''}
                               onChange={(e) => updateField('range_distribution', e.target.value)}
@@ -1031,7 +1031,7 @@ const FishManagementTwoPanel: FC = () => {
                               Water Body Type
                             </label>
                             <textarea
-                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                               rows={3}
                               value={editFormData.water_body_type || ''}
                               onChange={(e) => updateField('water_body_type', e.target.value)}
@@ -1056,7 +1056,7 @@ const FishManagementTwoPanel: FC = () => {
                             Habitat Description
                           </label>
                           <textarea
-                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                             rows={3}
                             value={editFormData.habitat || ''}
                             onChange={(e) => updateField('habitat', e.target.value)}
@@ -1070,7 +1070,7 @@ const FishManagementTwoPanel: FC = () => {
                               Diet & Feeding Habits
                             </label>
                             <textarea
-                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                               rows={2}
                               value={editFormData.diet_feeding_habits || ''}
                               onChange={(e) => updateField('diet_feeding_habits', e.target.value)}
@@ -1082,7 +1082,7 @@ const FishManagementTwoPanel: FC = () => {
                               Spawning Habits & Lifecycle
                             </label>
                             <textarea
-                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                              className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                               rows={2}
                               value={editFormData.spawning_habits_lifecycle || ''}
                               onChange={(e) => updateField('spawning_habits_lifecycle', e.target.value)}
@@ -1096,7 +1096,7 @@ const FishManagementTwoPanel: FC = () => {
                             Fishing Techniques
                           </label>
                           <textarea
-                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm"
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
                             rows={2}
                             value={editFormData.fishing_techniques || ''}
                             onChange={(e) => updateField('fishing_techniques', e.target.value)}
