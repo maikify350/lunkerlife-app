@@ -530,14 +530,34 @@ const FishManagementTwoPanel: FC = () => {
 
     setIsSaving(true)
     try {
-      const { id, created_at, updated_at, ...updateData } = editFormData as any
+      // Only send known editable fields to avoid type mismatches
+      const updatePayload: Record<string, any> = {
+        common_name: editFormData.common_name,
+        also_known_as: editFormData.also_known_as || null,
+        invasive: editFormData.invasive ?? false,
+        description: editFormData.description || null,
+        family: editFormData.family || null,
+        species: editFormData.species || null,
+        environmental_status: editFormData.environmental_status || null,
+        habitat: editFormData.habitat || null,
+        fishing_techniques: editFormData.fishing_techniques || null,
+        spawning_habits_lifecycle: editFormData.spawning_habits_lifecycle || null,
+        diet_feeding_habits: editFormData.diet_feeding_habits || null,
+        range_distribution: editFormData.range_distribution || null,
+        water_body_type: editFormData.water_body_type || null,
+        avg_adult_weight_lbs: editFormData.avg_adult_weight_lbs || null,
+        known_for: editFormData.known_for || null,
+        avg_adult_length_inches: editFormData.avg_adult_length_inches || null,
+        world_record: editFormData.world_record || null,
+        image: editFormData.image || null,
+        image_name_location: editFormData.image_name_location || null,
+        class: editFormData.class || null,
+        updated_at: new Date().toISOString()
+      }
 
       const { error } = await supabase
         .from('fish_species')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', selectedFishId)
 
       if (error) {
