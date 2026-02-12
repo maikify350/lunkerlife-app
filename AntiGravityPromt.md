@@ -130,3 +130,52 @@ When a Tool fails or an error occurs:
 └── .tmp/ # Temporary Workbench (Intermediates)
 └── .misc/ # Catch all folder as to no cluther root folder with jump)
 `
+
+---
+
+## 🐛 Known Issues & Lessons Learned
+
+### 1. Vite Default CSS Causes Invisible Text in Alternative Browsers (Atlas, Arc, etc.)
+
+**Date Discovered:** 2026-02-12  
+**Severity:** High — Form fields appear empty/uneditable  
+**Browsers Affected:** Atlas (macOS), potentially any browser that doesn't report `prefers-color-scheme: light`
+
+**Symptoms:**
+- All `<input>` fields showed blank/invisible text
+- Text only appeared when clicking into the field (cursor visible but text not)
+- `<textarea>` and `<select>` were also affected
+- Chrome on the same machine worked fine
+
+**Root Cause:**  
+Vite's default `index.css` template ships with a **dark theme as the base default**:
+
+```css
+/* Vite's default — THE CULPRIT */
+:root {
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);  /* WHITE TEXT */
+  background-color: #242424;          /* DARK BACKGROUND */
+}
+
+/* Light theme only applied via media query */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;        /* Dark text */
+    background-color: #ffffff;
+  }
+}
+```
+
+Browsers that don't report `prefers-color-scheme: light` (like Atlas) stay on the dark default. Form elements inherit `color: rgba(255, 255, 255, 0.87)` — **white text on a white input background** = invisible.
+
+**Fix Applied (Three Layers):**
+
+| Layer | File | Change |
+|---|---|---|
+| **1. Global CSS** | `src/index.css` | Changed `:root` defaults to `color: #213547; background: #fff; color-scheme: light` |
+| **2. Form Elements** | `src/index.css` | Added `input, textarea, select { color: #1a1a1a; background: #fff }` |
+| **3. Components** | `src/components/ui/Input.tsx` + inline classes | Added explicit `text-gray-900 bg-white` to all form elements |
+
+**Prevention Rule:**  
+> ⚠️ **Never rely on `prefers-color-scheme` media queries for base text/background colors.** Always set explicit, light-theme defaults in `:root` and add explicit `color` and `background-color` to form elements. The media query approach is unreliable across alternative browsers.
